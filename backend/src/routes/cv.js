@@ -17,7 +17,7 @@ router.post('/generate', authMiddleware, async (req, res) => {
 
     // Get user profile
     const user = await getOne(
-      `SELECT id, email, full_name, address, phone_number, linkedin_profile, github_link, experience_years, credly_profile_link 
+      `SELECT id, email, full_name, address, phone_number, linkedin_profile, github_link, experience_years 
        FROM users WHERE id = ?`,
       [req.user.id]
     );
@@ -42,18 +42,12 @@ router.post('/generate', authMiddleware, async (req, res) => {
       [req.user.id]
     );
 
-    const tags = await getAll(
-      'SELECT * FROM user_tags WHERE user_id = ?',
-      [req.user.id]
-    );
-
     const userProfile = {
       user,
       employmentHistory,
       education,
       certifications,
-      additionalInfo,
-      tags
+      additionalInfo
     };
 
     // Extract job details if not provided
@@ -76,16 +70,10 @@ router.post('/generate', authMiddleware, async (req, res) => {
     const resumeFilename = `${user.full_name}_Resume`;
     const coverLetterFilename = `${user.full_name}_Cover Letter`;
 
-    // Options for document generation (credly link and tags)
-    const docOptions = {
-      credlyProfileLink: user.credly_profile_link || null,
-      tags: tags.map(t => t.tag)
-    };
-
     // Generate DOCX and PDF for both resume and cover letter
     const [docxResult, pdfResult, coverLetterDocxResult, coverLetterPdfResult] = await Promise.all([
-      generateDocx(cvContent, user, resumeFilename, docOptions),
-      generatePdf(cvContent, user, resumeFilename, docOptions),
+      generateDocx(cvContent, user, resumeFilename),
+      generatePdf(cvContent, user, resumeFilename),
       generateCoverLetterDocx(coverLetterContent, user, coverLetterFilename),
       generateCoverLetterPdf(coverLetterContent, user, coverLetterFilename)
     ]);
@@ -141,7 +129,7 @@ router.post('/preview', authMiddleware, async (req, res) => {
 
     // Get user profile
     const user = await getOne(
-      `SELECT id, email, full_name, address, phone_number, linkedin_profile, github_link, experience_years, credly_profile_link 
+      `SELECT id, email, full_name, address, phone_number, linkedin_profile, github_link, experience_years 
        FROM users WHERE id = ?`,
       [req.user.id]
     );
@@ -171,19 +159,13 @@ router.post('/preview', authMiddleware, async (req, res) => {
       [req.user.id]
     );
 
-    const tags = await getAll(
-      'SELECT * FROM user_tags WHERE user_id = ?',
-      [req.user.id]
-    );
-
     const userProfile = {
       user,
       employmentHistory,
       education,
       certifications,
       skills,
-      additionalInfo,
-      tags
+      additionalInfo
     };
 
     // Generate CV content using OpenAI

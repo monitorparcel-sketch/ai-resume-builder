@@ -11,8 +11,7 @@ function sanitizeFilename(name) {
   return name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_').trim();
 }
 
-async function generateDocx(cvContent, userInfo, customFilename = null, options = {}) {
-  const { credlyProfileLink, tags } = options;
+async function generateDocx(cvContent, userInfo, customFilename = null) {
   const sections = [];
 
   // Header with contact info
@@ -54,6 +53,16 @@ async function generateDocx(cvContent, userInfo, customFilename = null, options 
       })
     );
   }
+
+  // Divider line
+  sections.push(
+    new Paragraph({
+      border: {
+        bottom: { color: '000000', style: BorderStyle.SINGLE, size: 6 }
+      },
+      spacing: { after: 200 }
+    })
+  );
 
   // Professional Summary
   if (cvContent.summary) {
@@ -168,16 +177,6 @@ async function generateDocx(cvContent, userInfo, customFilename = null, options 
       })
     );
 
-    // Add Credly profile link at the top of certifications if available
-    if (credlyProfileLink) {
-      sections.push(
-        new Paragraph({
-          children: [new TextRun({ text: `Credly Profile: ${credlyProfileLink}`, size: 20, color: '0066cc' })],
-          spacing: { after: 100 }
-        })
-      );
-    }
-
     for (const cert of cvContent.certifications) {
       sections.push(
         new Paragraph({
@@ -185,21 +184,6 @@ async function generateDocx(cvContent, userInfo, customFilename = null, options 
         })
       );
     }
-  }
-
-  // Tags as "Other" section
-  if (tags && tags.length > 0) {
-    sections.push(
-      new Paragraph({
-        children: [new TextRun({ text: 'OTHER', bold: true, size: 24 })],
-        spacing: { before: 300, after: 100 }
-      })
-    );
-    sections.push(
-      new Paragraph({
-        children: [new TextRun({ text: tags.join(' • '), size: 22 })]
-      })
-    );
   }
 
   // Additional Sections
@@ -243,8 +227,7 @@ async function generateDocx(cvContent, userInfo, customFilename = null, options 
   return { filename, filepath };
 }
 
-async function generatePdf(cvContent, userInfo, customFilename = null, options = {}) {
-  const { credlyProfileLink, tags } = options;
+async function generatePdf(cvContent, userInfo, customFilename = null) {
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -302,7 +285,12 @@ async function generatePdf(cvContent, userInfo, customFilename = null, options =
     }
     drawText(title.toUpperCase(), { size: 12, bold: true });
     y -= 5;
-    // Line removed as per requirement
+    page.drawLine({
+      start: { x: margin, y: y + 5 },
+      end: { x: 562, y: y + 5 },
+      thickness: 1,
+      color: rgb(0.2, 0.2, 0.2)
+    });
   };
 
   // Header
@@ -362,19 +350,9 @@ async function generatePdf(cvContent, userInfo, customFilename = null, options =
   // Certifications
   if (cvContent.certifications && cvContent.certifications.length > 0) {
     drawSection('Certifications');
-    // Add Credly profile link at the top of certifications if available
-    if (credlyProfileLink) {
-      drawText(`Credly Profile: ${credlyProfileLink}`, { size: 9, color: rgb(0, 0.4, 0.8) });
-    }
     for (const cert of cvContent.certifications) {
       drawText(`• ${cert}`);
     }
-  }
-
-  // Tags as "Other" section
-  if (tags && tags.length > 0) {
-    drawSection('Other');
-    drawText(tags.join(' • '));
   }
 
   // Additional
