@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const user = await getOne(
-      `SELECT id, email, full_name, address, phone_number, linkedin_profile, github_link, experience_years, role, timezone, credly_profile_link, created_at 
+      `SELECT id, email, full_name, address, phone_number, linkedin_profile, github_link, experience_years, role, created_at 
        FROM users WHERE id = ?`,
       [req.user.id]
     );
@@ -39,19 +39,13 @@ router.get('/profile', authMiddleware, async (req, res) => {
       [req.user.id]
     );
 
-    const tags = await getAll(
-      'SELECT * FROM user_tags WHERE user_id = ? ORDER BY created_at DESC',
-      [req.user.id]
-    );
-
     res.json({
       user,
       employmentHistory,
       education,
       certifications,
       skills,
-      additionalInfo,
-      tags
+      additionalInfo
     });
   } catch (error) {
     console.error('Profile fetch error:', error);
@@ -68,9 +62,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
       phone_number,
       linkedin_profile,
       github_link,
-      experience_years,
-      timezone,
-      credly_profile_link
+      experience_years
     } = req.body;
 
     await runQuery(
@@ -81,11 +73,9 @@ router.put('/profile', authMiddleware, async (req, res) => {
         linkedin_profile = COALESCE(?, linkedin_profile),
         github_link = COALESCE(?, github_link),
         experience_years = COALESCE(?, experience_years),
-        timezone = COALESCE(?, timezone),
-        credly_profile_link = COALESCE(?, credly_profile_link),
         updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [full_name, address, phone_number, linkedin_profile, github_link, experience_years, timezone, credly_profile_link, req.user.id]
+      [full_name, address, phone_number, linkedin_profile, github_link, experience_years, req.user.id]
     );
 
     res.json({ message: 'Profile updated successfully' });
@@ -302,39 +292,6 @@ router.delete('/additional/:id', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Additional info delete error:', error);
     res.status(500).json({ error: 'Failed to delete additional info' });
-  }
-});
-
-// Tags CRUD (plain text tags for "Other" section)
-router.post('/tags', authMiddleware, async (req, res) => {
-  try {
-    const { tag } = req.body;
-    
-    if (!tag || !tag.trim()) {
-      return res.status(400).json({ error: 'Tag is required' });
-    }
-
-    const result = await runQuery(
-      `INSERT INTO user_tags (user_id, tag)
-       VALUES (?, ?)`,
-      [req.user.id, tag.trim()]
-    );
-
-    const newTag = await getOne('SELECT * FROM user_tags WHERE id = ?', [result.lastID]);
-    res.status(201).json({ tag: newTag });
-  } catch (error) {
-    console.error('Tag add error:', error);
-    res.status(500).json({ error: 'Failed to add tag' });
-  }
-});
-
-router.delete('/tags/:id', authMiddleware, async (req, res) => {
-  try {
-    await runQuery('DELETE FROM user_tags WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
-    res.json({ message: 'Tag deleted successfully' });
-  } catch (error) {
-    console.error('Tag delete error:', error);
-    res.status(500).json({ error: 'Failed to delete tag' });
   }
 });
 

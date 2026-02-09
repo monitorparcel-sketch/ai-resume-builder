@@ -8,14 +8,12 @@ export default function History() {
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [filter, setFilter] = useState('all');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [userTimezone, setUserTimezone] = useState('UTC');
 
   useEffect(() => {
     fetchApplications();
   }, [pagination.page, filter]);
 
-  const fetchApplications = async (search = searchQuery) => {
+  const fetchApplications = async () => {
     setLoading(true);
     try {
       const params = { page: pagination.page, limit: 10 };
@@ -27,11 +25,6 @@ export default function History() {
         params.endDate = dateRange.end;
       }
 
-      // Add search parameter for company name
-      if (search && search.trim()) {
-        params.search = search.trim();
-      }
-
       const response = await applicationsAPI.getAll(params);
       setApplications(response.data.applications);
       setPagination(prev => ({
@@ -39,10 +32,6 @@ export default function History() {
         total: response.data.pagination.total,
         totalPages: response.data.pagination.totalPages
       }));
-      // Set user timezone from response
-      if (response.data.userTimezone) {
-        setUserTimezone(response.data.userTimezone);
-      }
     } catch (error) {
       console.error('Failed to fetch applications:', error);
     } finally {
@@ -73,50 +62,12 @@ export default function History() {
     }
   };
 
-  const handleCompanySearch = (e) => {
-    e.preventDefault();
-    setPagination(prev => ({ ...prev, page: 1 }));
-    fetchApplications(searchQuery);
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    setPagination(prev => ({ ...prev, page: 1 }));
-    fetchApplications('');
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Application History</h1>
         <p className="text-gray-500 mt-1">View and manage your past CV generations</p>
-      </div>
-
-      {/* Company Search */}
-      <div className="card p-4">
-        <form onSubmit={handleCompanySearch} className="flex items-center gap-2">
-          <div className="relative flex-1 max-w-md">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="input py-2 pl-10"
-              placeholder="Search by company name..."
-            />
-            <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <button type="submit" className="btn btn-primary py-2">
-            Search
-          </button>
-          {searchQuery && (
-            <button type="button" onClick={handleClearSearch} className="btn btn-secondary py-2">
-              Clear
-            </button>
-          )}
-        </form>
       </div>
 
       {/* Filters */}
@@ -160,9 +111,8 @@ export default function History() {
       </div>
 
       {/* Stats Summary */}
-      <div className="flex items-center justify-between text-sm text-gray-500">
-        <span>Showing {applications.length} of {pagination.total} applications</span>
-        <span className="text-xs">Timezone: {userTimezone}</span>
+      <div className="text-sm text-gray-500">
+        Showing {applications.length} of {pagination.total} applications
       </div>
 
       {/* Applications List */}

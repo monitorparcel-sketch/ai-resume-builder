@@ -67,10 +67,6 @@ export const usersAPI = {
   addAdditional: (data) => api.post('/users/additional', data),
   deleteAdditional: (id) => api.delete(`/users/additional/${id}`),
   
-  // Tags (plain text for "Other" section)
-  addTag: (tag) => api.post('/users/tags', { tag }),
-  deleteTag: (id) => api.delete(`/users/tags/${id}`),
-  
   // Admin
   getAllUsers: () => api.get('/users/all'),
   updateUserRole: (id, role) => api.put(`/users/${id}/role`, { role }),
