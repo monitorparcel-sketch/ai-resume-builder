@@ -16,33 +16,59 @@ CRITICAL GUIDELINES:
 4. Highlight the most relevant skills and experiences for this specific job
 5. Use keywords from the job description naturally throughout
 6. Do NOT fabricate information - only use and enhance what's provided
-7. Generate skills based on the candidate's experience and the job requirements
+7. Generate comprehensive skills based on the candidate's experience and the job requirements
 
 EXPERIENCE GUIDELINES:
-- For the FIRST and SECOND most recent positions: Write 6-8 detailed sentences/bullet points explaining responsibilities, achievements, and impact. Include specific metrics, technologies used, and leadership examples.
-- For OTHER positions: Write 3-4 concise sentences/bullet points focusing on key achievements and relevant experience.
+- For the FIRST and SECOND most recent positions: Write AT LEAST 10 detailed sentences/bullet points for each. Include specific responsibilities, achievements, impact, metrics, technologies used, leadership examples, team collaborations, project outcomes, process improvements, and business results.
+- For OTHER positions: Write 4-5 concise sentences/bullet points focusing on key achievements and relevant experience.
 
 SUMMARY GUIDELINES:
-- Write a compelling 3-4 sentence professional summary
-- Highlight years of experience, key expertise areas, and notable achievements
-- Include relevant keywords from the job description
+- Write a compelling professional summary of 7-8 sentences
+- Start with years of experience and primary expertise areas
+- Highlight key technical proficiencies and domain expertise
+- Mention notable achievements with quantifiable results
+- Include leadership experience and team collaboration skills
+- Reference industry knowledge and best practices
+- Emphasize problem-solving abilities and innovative contributions
+- Conclude with career goals aligned with the target position
+- Include relevant keywords from the job description throughout
 
-SKILLS GUIDELINES:
-- Generate 10-15 relevant skills based on the candidate's experience and job requirements
-- Include a mix of technical skills, tools, and soft skills
-- Explain each skill with brief context (e.g., "Python (5+ years, data analysis & automation)")
+SKILLS GUIDELINES - VERY IMPORTANT:
+- Generate AT LEAST 40 relevant skills organized by category
+- Format skills as "Category: skill1, skill2, skill3, skill4, skill5" where multiple skills are comma-separated under each category
+- Include these categories (customize based on job requirements):
+  * Programming Languages
+  * Frameworks & Libraries  
+  * Cloud Technologies & Services (include specific services like AWS(Lambda, EC2, S3), Azure(Functions, CosmosDB), GCP(BigQuery, Firebase))
+  * Architecture (Microservices, Event-Driven, DDD, TDD, Clean Architecture, etc.)
+  * AI & ML (if relevant to the job)
+  * Databases & Data Storage (SQL and NoSQL databases, Data Warehousing, Graph Databases)
+  * DevOps & CI/CD (Docker, Kubernetes, Jenkins, GitLab CI/CD, Terraform, etc.)
+  * Version Control & Collaboration (Git, Agile/Scrum, JIRA, Confluence)
+  * Testing & Quality Assurance (Unit Testing frameworks, Integration Testing tools, Code Coverage tools)
+  * Additional Skills (RESTful API, GraphQL, Security Best Practices, Performance Optimization, etc.)
 
 OUTPUT FORMAT (JSON):
 {
-  "summary": "Detailed 3-4 sentence professional summary tailored to the job with specific expertise and achievements",
-  "skills": ["Skill 1 (with context)", "Skill 2 (with context)", ...],
+  "summary": "Comprehensive 7-8 sentence professional summary that covers experience, expertise, achievements, leadership, domain knowledge, problem-solving skills, and career alignment",
+  "skills": [
+    "Programming Languages: Java, Python, JavaScript, TypeScript, SQL, Go, Scala, Kotlin, C#, Bash",
+    "Frameworks & Libraries: React, Angular, Vue.js, Spring Boot, Express, NestJS, Django, Flask",
+    "Cloud Technologies & Services: AWS(Lambda, EC2, S3, RDS, CloudFormation), Azure(App Services, Functions, CosmosDB), GCP(BigQuery, Firebase, Pub/Sub)",
+    "Architecture: Microservices, Event-Driven, Reactive, DDD, TDD, BDD, Clean Architecture, CQRS",
+    "Databases & Data Storage: SQL(PostgreSQL, MySQL, MSSQL), NoSQL(MongoDB, Redis, Cassandra), Data Warehousing(Redshift, BigQuery)",
+    "DevOps & CI/CD: Docker, Kubernetes, Helm, Jenkins, GitLab CI/CD, GitHub Actions, Terraform, Ansible",
+    "Version Control & Collaboration: Git(GitHub, GitLab, Bitbucket), Agile/Scrum methodologies, JIRA, Confluence",
+    "Testing & Quality Assurance: JUnit, TestNG, Mockito, Selenium, Postman, RestAssured, SonarQube, Jacoco",
+    "Additional Skills: RESTful API Design, GraphQL, WebSockets, Security Best Practices(OAuth, JWT, HTTPS), CI/CD Pipeline Design"
+  ],
   "experience": [
     {
       "position": "Job Title",
       "company": "Company Name",
       "location": "City, State",
       "period": "Start - End",
-      "achievements": ["Detailed achievement with metrics and impact", ...]
+      "achievements": ["Achievement 1 (10+ for first two jobs, 4-5 for others)", ...]
     }
   ],
   "education": [
@@ -79,7 +105,7 @@ ${employmentHistory.map((job, index) => `
 ${index + 1}. **${job.position}** at **${job.company}**
    Location: ${job.location || 'N/A'}
    Period: ${job.start_date || ''} - ${job.end_date || 'Present'}
-   ${index < 2 ? '(Generate 6-8 detailed bullet points for this position)' : '(Generate 3-4 concise bullet points for this position)'}
+   ${index < 2 ? '(IMPORTANT: Generate AT LEAST 10 detailed bullet points for this position - include responsibilities, achievements, metrics, technologies, leadership, team collaborations, project outcomes, process improvements, and business impact)' : '(Generate 4-5 concise bullet points for this position)'}
 `).join('\n')}
 
 ### Education
@@ -104,11 +130,23 @@ ${jobDescription}
 
 ---
 
-Generate a professional, highly tailored resume in the JSON format specified. Remember:
-- Generate detailed skills with context based on the candidate's background and job requirements
-- First two positions need 6-8 detailed achievements each
-- Other positions need 3-4 achievements each
-- Make the summary compelling and detailed (3-4 sentences)`;
+Generate a professional, highly tailored resume in the JSON format specified. 
+
+CRITICAL REQUIREMENTS:
+1. SUMMARY: Write exactly 7-8 sentences covering experience, expertise, achievements, leadership, domain knowledge, problem-solving, and career goals.
+
+2. SKILLS: Generate AT LEAST 40 skills organized by category in this format:
+   - "Programming Languages: Java, Python, JavaScript, TypeScript, SQL, Go, Scala, Kotlin, C#, Bash"
+   - "Frameworks & Libraries: React, Angular, Vue.js, Spring Boot, Express, NestJS, Django, Flask, Next.js, Nuxt.js"
+   - "Cloud Technologies & Services: AWS(Lambda, EC2, S3, RDS), Azure(App Services, Functions), GCP(BigQuery, Firebase)"
+   - "Architecture: Microservices, Event-Driven, Reactive, DDD, TDD, BDD, Clean Architecture, CQRS"
+   - "Databases & Data Storage: SQL(PostgreSQL, MySQL), NoSQL(MongoDB, Redis, Cassandra), Data Warehousing(Redshift)"
+   - "DevOps & CI/CD: Docker, Kubernetes, Helm, Jenkins, GitLab CI/CD, GitHub Actions, Terraform, Ansible"
+   - "Version Control & Collaboration: Git(GitHub, GitLab, Bitbucket), Agile/Scrum, JIRA, Confluence"
+   - "Testing & Quality Assurance: JUnit, TestNG, Mockito, Selenium, Postman, SonarQube, Jacoco"
+   - "Additional Skills: RESTful API, GraphQL, WebSockets, OAuth, JWT, HTTPS, Performance Optimization"
+
+3. EXPERIENCE: First and second positions MUST have AT LEAST 10 detailed bullet points each. Other positions need 4-5 bullet points.`;
 
   try {
     const response = await openai.chat.completions.create({

@@ -71,7 +71,7 @@ async function generateDocx(cvContent, userInfo, customFilename = null, options 
     );
   }
 
-  // Skills
+  // Skills - formatted as "Category: skill1, skill2, skill3"
   if (cvContent.skills && cvContent.skills.length > 0) {
     sections.push(
       new Paragraph({
@@ -79,12 +79,15 @@ async function generateDocx(cvContent, userInfo, customFilename = null, options 
         spacing: { before: 200, after: 100 }
       })
     );
-    sections.push(
-      new Paragraph({
-        children: [new TextRun({ text: cvContent.skills.join(' • '), size: 22 })],
-        spacing: { after: 200 }
-      })
-    );
+    // Each skill is a category line like "Programming Languages: Java, Python, JavaScript"
+    for (const skillLine of cvContent.skills) {
+      sections.push(
+        new Paragraph({
+          children: [new TextRun({ text: skillLine, size: 20 })],
+          spacing: { after: 40 }
+        })
+      );
+    }
   }
 
   // Experience
@@ -327,10 +330,13 @@ async function generatePdf(cvContent, userInfo, customFilename = null, options =
     drawText(cvContent.summary);
   }
 
-  // Skills
+  // Skills - formatted as "Category: skill1, skill2, skill3"
   if (cvContent.skills && cvContent.skills.length > 0) {
     drawSection('Skills');
-    drawText(cvContent.skills.join(' • '));
+    // Each skill is a category line like "Programming Languages: Java, Python, JavaScript"
+    for (const skillLine of cvContent.skills) {
+      drawText(skillLine, { size: 9 });
+    }
   }
 
   // Experience
