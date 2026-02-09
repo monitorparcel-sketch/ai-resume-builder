@@ -28,11 +28,22 @@ function initDatabase() {
           linkedin_profile TEXT,
           github_link TEXT,
           experience_years INTEGER DEFAULT 0,
+          timezone TEXT DEFAULT 'UTC',
           role TEXT DEFAULT 'user',
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
+
+      // Add timezone column if it doesn't exist (for existing databases)
+      database.run(`ALTER TABLE users ADD COLUMN timezone TEXT DEFAULT 'UTC'`, (err) => {
+        // Ignore error if column already exists
+      });
+
+      // Add credly_profile_link column if it doesn't exist (for existing databases)
+      database.run(`ALTER TABLE users ADD COLUMN credly_profile_link TEXT`, (err) => {
+        // Ignore error if column already exists
+      });
 
       // Employment history table
       database.run(`
@@ -105,6 +116,17 @@ function initDatabase() {
           user_id INTEGER NOT NULL,
           category TEXT NOT NULL,
           content TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+
+      // User tags table (plain text tags for "Other" section in resume)
+      database.run(`
+        CREATE TABLE IF NOT EXISTS user_tags (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          tag TEXT NOT NULL,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
