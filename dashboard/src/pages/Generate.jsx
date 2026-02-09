@@ -29,6 +29,11 @@ export default function Generate() {
       return;
     }
 
+    if (!companyName.trim()) {
+      setError('Company name is required');
+      return;
+    }
+
     // Check for duplicate application
     if (!skipDuplicateCheck && companyName.trim()) {
       const isDuplicate = await checkDuplicate();
@@ -225,7 +230,7 @@ Include:
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">Company Name (Optional)</label>
+              <label className="label">Company Name *</label>
               <input
                 type="text"
                 value={companyName}
@@ -233,8 +238,9 @@ Include:
                 className="input"
                 placeholder="e.g., Google, Microsoft"
                 disabled={loading}
+                required
               />
-              <p className="text-xs text-gray-500 mt-1">Used to check for duplicate applications</p>
+              <p className="text-xs text-gray-500 mt-1">Required. Used to check for duplicate applications</p>
             </div>
             <div>
               <label className="label">Job Posting URL (Optional)</label>

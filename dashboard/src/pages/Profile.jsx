@@ -2,6 +2,31 @@ import { useState, useEffect } from 'react';
 import { usersAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 
+// Common timezones list
+const TIMEZONES = [
+  'UTC',
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Toronto',
+  'America/Vancouver',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Europe/Rome',
+  'Europe/Madrid',
+  'Asia/Tokyo',
+  'Asia/Shanghai',
+  'Asia/Hong_Kong',
+  'Asia/Singapore',
+  'Asia/Dubai',
+  'Asia/Kolkata',
+  'Australia/Sydney',
+  'Australia/Melbourne',
+  'Pacific/Auckland'
+];
+
 export default function Profile() {
   const { user, updateUser } = useAuth();
   const [profile, setProfile] = useState(null);
@@ -15,6 +40,7 @@ export default function Profile() {
   const [newEmployment, setNewEmployment] = useState({ position: '', company: '', location: '', start_date: '', end_date: '' });
   const [newEducation, setNewEducation] = useState({ degree: '', institution: '', location: '', graduation_date: '', gpa: '' });
   const [newCertification, setNewCertification] = useState({ name: '', issuer: '', date_obtained: '', credly_link: '' });
+  const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
     fetchProfile();
@@ -144,6 +170,36 @@ export default function Profile() {
     }
   };
 
+  // Tag handlers
+  const handleAddTag = async (e) => {
+    e.preventDefault();
+    if (!newTag.trim()) return;
+    try {
+      const response = await usersAPI.addTag(newTag.trim());
+      setProfile(prev => ({
+        ...prev,
+        tags: [...(prev.tags || []), response.data.tag]
+      }));
+      setNewTag('');
+      showMessage('success', 'Tag added');
+    } catch (error) {
+      showMessage('error', 'Failed to add tag');
+    }
+  };
+
+  const handleDeleteTag = async (id) => {
+    try {
+      await usersAPI.deleteTag(id);
+      setProfile(prev => ({
+        ...prev,
+        tags: prev.tags.filter(t => t.id !== id)
+      }));
+      showMessage('success', 'Tag deleted');
+    } catch (error) {
+      showMessage('error', 'Failed to delete tag');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -156,7 +212,8 @@ export default function Profile() {
     { id: 'basic', label: 'Basic Info' },
     { id: 'employment', label: 'Employment' },
     { id: 'education', label: 'Education' },
-    { id: 'certifications', label: 'Certifications' }
+    { id: 'certifications', label: 'Certifications' },
+    { id: 'tags', label: 'Tags' }
   ];
 
   return (
@@ -214,9 +271,20 @@ export default function Profile() {
               <input type="number" name="experience_years" value={basicInfo.experience_years || ''} onChange={handleBasicInfoChange} className="input" />
             </div>
           </div>
-          <div>
-            <label className="label">Address</label>
-            <input type="text" name="address" value={basicInfo.address || ''} onChange={handleBasicInfoChange} className="input" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Timezone</label>
+              <select name="timezone" value={basicInfo.timezone || 'UTC'} onChange={handleBasicInfoChange} className="input">
+                {TIMEZONES.map(tz => (
+                  <option key={tz} value={tz}>{tz}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">Used for displaying log history timestamps</p>
+            </div>
+            <div>
+              <label className="label">Address</label>
+              <input type="text" name="address" value={basicInfo.address || ''} onChange={handleBasicInfoChange} className="input" />
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -349,6 +417,27 @@ export default function Profile() {
       {/* Certifications Tab */}
       {activeTab === 'certifications' && (
         <div className="space-y-4">
+          {/* Credly Profile Link - displayed at the top */}
+          <div className="card p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <label className="label">Credly Profile Link</label>
+                <input 
+                  type="url" 
+                  name="credly_profile_link" 
+                  value={basicInfo.credly_profile_link || ''} 
+                  onChange={handleBasicInfoChange} 
+                  className="input" 
+                  placeholder="https://www.credly.com/users/yourusername"
+                />
+                <p className="text-xs text-gray-500 mt-1">This link will appear at the top of your Certifications section on the resume</p>
+              </div>
+              <button onClick={handleSaveBasicInfo} disabled={saving} className="btn btn-primary ml-4 self-end">
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+
           {/* Info banner */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-700">
@@ -405,6 +494,53 @@ export default function Profile() {
                 </div>
               </div>
               <button type="submit" className="btn btn-primary">Add Certification</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Tags Tab */}
+      {activeTab === 'tags' && (
+        <div className="space-y-4">
+          {/* Info banner */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-700">
+              <strong>Note:</strong> Tags are plain text items that will appear in the "Other" section of your resume. Use them for languages, hobbies, interests, or any additional information.
+            </p>
+          </div>
+
+          {/* Existing Tags */}
+          <div className="card p-6">
+            <h3 className="font-semibold text-gray-900 mb-4">Your Tags</h3>
+            {profile?.tags && profile.tags.length > 0 ? (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {profile.tags.map(tag => (
+                  <span key={tag.id} className="inline-flex items-center gap-1 px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm">
+                    {tag.tag}
+                    <button onClick={() => handleDeleteTag(tag.id)} className="ml-1 text-primary-400 hover:text-red-500">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm mb-4">No tags added yet.</p>
+            )}
+
+            {/* Add Tag Form */}
+            <form onSubmit={handleAddTag} className="flex gap-2">
+              <input
+                type="text"
+                value={newTag}
+                onChange={e => setNewTag(e.target.value)}
+                className="input flex-1"
+                placeholder="e.g., Fluent in Spanish, Open Source Contributor, Marathon Runner"
+              />
+              <button type="submit" className="btn btn-primary" disabled={!newTag.trim()}>
+                Add Tag
+              </button>
             </form>
           </div>
         </div>
