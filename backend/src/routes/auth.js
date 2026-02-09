@@ -16,7 +16,8 @@ router.post('/register', async (req, res) => {
       phone_number,
       linkedin_profile,
       github_link,
-      experience_years
+      experience_years,
+      timezone
     } = req.body;
 
     if (!email || !password || !full_name) {
@@ -32,19 +33,19 @@ router.post('/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert user
+    // Insert user with timezone
     const result = await runQuery(
-      `INSERT INTO users (email, password, full_name, address, phone_number, linkedin_profile, github_link, experience_years)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [email, hashedPassword, full_name, address || '', phone_number || '', linkedin_profile || '', github_link || '', experience_years || 0]
+      `INSERT INTO users (email, password, full_name, address, phone_number, linkedin_profile, github_link, experience_years, timezone)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [email, hashedPassword, full_name, address || '', phone_number || '', linkedin_profile || '', github_link || '', experience_years || 0, timezone || 'UTC']
     );
 
-    const user = await getOne('SELECT id, email, full_name, role FROM users WHERE id = ?', [result.lastID]);
+    const user = await getOne('SELECT id, email, full_name, role, timezone FROM users WHERE id = ?', [result.lastID]);
     const token = generateToken(user);
 
     res.status(201).json({
       message: 'User registered successfully',
-      user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role },
+      user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role, timezone: user.timezone },
       token
     });
   } catch (error) {
@@ -80,7 +81,8 @@ router.post('/login', async (req, res) => {
         id: user.id, 
         email: user.email, 
         full_name: user.full_name, 
-        role: user.role 
+        role: user.role,
+        timezone: user.timezone || 'UTC'
       },
       token
     });
@@ -94,7 +96,7 @@ router.post('/login', async (req, res) => {
 router.get('/me', authMiddleware, async (req, res) => {
   try {
     const user = await getOne(
-      `SELECT id, email, full_name, address, phone_number, linkedin_profile, github_link, experience_years, role, created_at 
+      `SELECT id, email, full_name, address, phone_number, linkedin_profile, github_link, experience_years, role, timezone, created_at 
        FROM users WHERE id = ?`,
       [req.user.id]
     );

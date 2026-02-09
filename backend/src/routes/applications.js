@@ -28,13 +28,14 @@ router.get('/check-duplicate', authMiddleware, async (req, res) => {
   }
 });
 
-// Get application history with filtering
+// Get application history with filtering and search
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { period, startDate, endDate, page = 1, limit = 20 } = req.query;
+    const { period, startDate, endDate, page = 1, limit = 20, search } = req.query;
     const offset = (page - 1) * limit;
     
     let dateFilter = '';
+    let searchFilter = '';
     const params = [req.user.id];
 
     if (period) {
@@ -54,20 +55,30 @@ router.get('/', authMiddleware, async (req, res) => {
       params.push(startDate, endDate);
     }
 
+    // Add search filter for company name
+    if (search && search.trim()) {
+      searchFilter = 'AND LOWER(company_name) LIKE LOWER(?)';
+      params.push(`%${search.trim()}%`);
+    }
+
     // Get total count
     const countResult = await getOne(
-      `SELECT COUNT(*) as total FROM applications WHERE user_id = ? ${dateFilter}`,
+      `SELECT COUNT(*) as total FROM applications WHERE user_id = ? ${dateFilter} ${searchFilter}`,
       params
     );
 
     // Get applications
     const applications = await getAll(
       `SELECT * FROM applications 
-       WHERE user_id = ? ${dateFilter}
+       WHERE user_id = ? ${dateFilter} ${searchFilter}
        ORDER BY applied_at DESC
        LIMIT ? OFFSET ?`,
       [...params, parseInt(limit), parseInt(offset)]
     );
+
+    // Get user timezone for formatting
+    const user = await getOne('SELECT timezone FROM users WHERE id = ?', [req.user.id]);
+    const userTimezone = user?.timezone || 'UTC';
 
     // Format response
     const formattedApps = applications.map(app => ({
@@ -76,6 +87,7 @@ router.get('/', authMiddleware, async (req, res) => {
       companyName: app.company_name,
       jdLink: app.jd_link,
       appliedAt: app.applied_at,
+      appliedAtTimezone: userTimezone,
       status: app.status,
       cvDocUrl: app.cv_doc_path ? `/uploads/${app.cv_doc_path}` : null,
       cvPdfUrl: app.cv_pdf_path ? `/uploads/${app.cv_pdf_path}` : null,
@@ -91,7 +103,8 @@ router.get('/', authMiddleware, async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         totalPages: Math.ceil(countResult.total / limit)
-      }
+      },
+      userTimezone
     });
   } catch (error) {
     console.error('Applications fetch error:', error);
